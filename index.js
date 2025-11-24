@@ -104,6 +104,22 @@ async function run() {
       res.send({ url: session.url });
     });
 
+
+
+    app.get('/payments',async(req,res)=>{
+      const email=req.query.email;
+      const query={}
+      if(email){
+        query.customerEmail=email;
+      }
+      const cursor =paymentCollection.find(query);
+      const result=await cursor.toArray();
+      res.send(result)
+    })
+
+
+
+
     // old
     // app.post("/create-checkout-session", async (req, res) => {
     //   const paymentInfo = req.body;
@@ -143,6 +159,17 @@ async function run() {
 
       console.log("session retrieve", session);
       const trackingId = generateTrackingId();
+
+
+      const transactionId=session.payment_intent;
+      const query ={transactionId:transactionId}
+      const paymentExits=await paymentCollection.findOne(query)
+
+      if(paymentExits){
+        return res.send({message: 'already exist',transactionId})
+      }
+
+
 
       if (session.payment_status === "paid") {
         const id = session.metadata.parcelId;
